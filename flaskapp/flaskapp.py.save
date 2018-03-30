@@ -1,0 +1,44 @@
+from flask import Flask
+from flask import request
+import sys
+import json
+import random
+
+sys.path.insert(0,"/home/ubuntu/Spring2018/Neural_Network") # this lets us use the neural network module even tho its in a different folder
+
+from better_neural_network import Neural_Network
+
+app = Flask(__name__)
+app.debug = True
+
+@app.route('/')
+def hello_world():
+  return 'Hello from Flask!'
+
+@app.route('/test')
+def test(): 
+	return "test succsesful!"
+
+@app.route('/train_nn')
+def run_nn():
+	training_data_link = request.args.get("link")
+	layer_sizes = json.loads(request.args.get("sizes"))
+	training_runs = min(json.loads(request.args.get("training_runs")), 2000)
+	inputs_and_outputs = json.loads(request.args.get("io"))
+	id = "/home/ubuntu/flaskapp/" + request.args.get("id") # note, later on we will need to check if an ID already exists, this is super easy and takes like legit 2 min, but im lazy to TODO for now
+	myNN = Neural_Network(layer_sizes, id)
+	try:
+		myNN.learn_from_url(training_data_link, inputs_and_outputs, training_runs)
+		myNN.save_data()
+	except Exception as e:
+		return(str(e))
+	#myNN.learn_from_url(training_data_link, inputs_and_outputs, training_runs)
+	#myNN.save_data()
+	return "got here" + str(training_data_link) + json.dumps(layer_sizes[0]) + str(training_runs) + json.dumps(inputs_and_outputs[0])
+
+@app.route('/get_nn_output')
+def get_nn_output():
+	id = "/home/ubuntu/flaskapp/" + request.args.get("id")
+
+if __name__ == '__main__':
+  app.run()
